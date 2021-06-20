@@ -139,6 +139,7 @@ class DeviceClient(object):
 class DeviceThread(threading.Thread):
     def __init__(self):
         self.__deviceClient = DeviceClient()
+        self.stop = False
         super(DeviceThread, self).__init__()
 
     def connect(self, device_id):
@@ -150,6 +151,9 @@ class DeviceThread(threading.Thread):
     def run(self):
         try:
             while True:
+                if self.stop:
+                    break
+                
                 self.__deviceClient.read_device()
         finally:
             self.disconnect()
@@ -184,7 +188,10 @@ def main():
     while True:
         for thread in threads:
             if not check_thread_alive(thread):
+                for thread in threads:
+                    thread.stop = True
                 raise Exception("Thread died.")
+                
         time.sleep(1)
 
 
