@@ -114,7 +114,6 @@ class DeviceClient(object):
         except Exception as e:
             print('\n', e)
             self._disconnect()
-            self.connect(self.__device_id)
             raise Exception(e)
 
     def _disconnect(self):
