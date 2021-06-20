@@ -1,6 +1,3 @@
-# self.__device1_id = "01E19747"
-# self.__device2_id = "01E196D1"
-
 import threading
 from uldaq import (get_daq_device_inventory,
                    DaqDevice,
@@ -8,6 +5,7 @@ from uldaq import (get_daq_device_inventory,
                    DigitalDirection,
                    DigitalPortType)
 from enum import Flag, auto
+import argparse
 
 interfaceType = InterfaceType.USB
 
@@ -73,7 +71,7 @@ class DeviceClient(object):
             self.__device = next(
                 f for f in self.__devices if f.unique_id == self.__device_id)
 
-            print('Trying to connect to Device Id: ', self.__device)
+            print('Trying to connect to Device Id: ', self.__device_id)
             self.__daq_device = DaqDevice(self.__device)
 
             # Get the DioDevice object and verify that it is valid.
@@ -174,6 +172,16 @@ def main():
         print('  ', device.product_name, ' (', device.unique_id, ') - ',
               'Device ID = ', device.product_id, sep='')
 
+    parser = argparse.ArgumentParser(description='Device Id(s).')
+    parser.add_argument('devices', metavar='D', type=str, nargs='+',
+                        help='a list of device Ids')
+
+    args = parser.parse_args()
+
+    for device in args.devices:
+        thread = DeviceThread()
+        thread.connect(device)
+        thread.start()
 
 if __name__ == "__main__":
     main()
