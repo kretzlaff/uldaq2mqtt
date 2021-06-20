@@ -153,7 +153,7 @@ class DeviceThread(threading.Thread):
             while True:
                 if self.stop:
                     break
-                
+
                 self.__deviceClient.read_device()
         finally:
             self.disconnect()
@@ -180,10 +180,13 @@ def main():
     threads = []
 
     for device in args.devices:
-        thread = DeviceThread()
-        thread.connect(device)
-        thread.start()
-        threads.append(thread)
+        try:
+            thread = DeviceThread()
+            thread.connect(device)
+            thread.start()
+            threads.append(thread)
+        except Exception as e:
+            raise Exception(e)
 
     while True:
         for thread in threads:
