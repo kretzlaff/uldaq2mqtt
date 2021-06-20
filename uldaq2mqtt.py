@@ -134,7 +134,7 @@ class DeviceClient(object):
                 self.__publish(port, bit, pressed)
 
     def __publish(self, port, bit, pressed):
-        self.__mqttClient.publish(self.__device_id, port + "/" + bit, pressed)
+        self.__mqttClient.publish(self.__device_id, str(port) + "/" + str(bit), pressed)
 
 
 class DeviceThread(threading.Thread):
