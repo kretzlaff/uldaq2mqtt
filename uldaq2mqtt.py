@@ -7,6 +7,7 @@ from uldaq import (get_daq_device_inventory,
 from enum import Flag, auto
 import argparse
 import time
+import paho.mqtt.client as mqtt
 
 interfaceType = InterfaceType.USB
 
@@ -56,9 +57,10 @@ class DeviceClient(object):
             }
         }
 
-    def connect(self, device_id):
+    def connect(self, device_id, mqttClient):
         self.__daq_device = None
         self.__device_id = device_id
+        self.__mqttClient = mqttClient
 
         try:
             # Get descriptors for all of the available DAQ devices.
@@ -130,10 +132,10 @@ class DeviceClient(object):
             pressed = bit in bits
             if (self.__lastInputAction[port][bit] != pressed):
                 self.__lastInputAction[port][bit] = pressed
-                self.__publish(port, bit)
+                self.__publish(port, bit, pressed)
 
-    def __publish(self, port, bit):
-        print("MQTT")
+    def __publish(self, port, bit, pressed):
+        self.__mqttClient.publish(self.__device_id, port + "/" + bit, pressed)
 
 
 class DeviceThread(threading.Thread):
@@ -142,8 +144,8 @@ class DeviceThread(threading.Thread):
         self.stop = False
         super(DeviceThread, self).__init__()
 
-    def connect(self, device_id):
-        self.__deviceClient.connect(device_id)
+    def connect(self, device_id, mqttClient):
+        self.__deviceClient.connect(device_id, mqttClient)
 
     def disconnect(self):
         self.__deviceClient._disconnect()
@@ -157,6 +159,37 @@ class DeviceThread(threading.Thread):
                 self.__deviceClient.read_device()
         finally:
             self.disconnect()
+
+class MqttClient:
+    
+    def __init__(self, ip, port):
+        self.__client = mqtt.Client()
+        self.__client.on_connect = self.__on_connect
+        self.__client.connect(ip, port, 60)
+        self.__client.loop_start()
+
+    def __enter__(self):
+        return self
+
+    # ...
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.__client.loop_stop()
+        self.__client.disconnect()
+        print("Disconnected")
+
+    def publish(self, device, port, message):
+        self.__client.publish("uldaq2mqtt/" + device + "/" + port, message)
+        print("uldaq2mqtt/" + device + "/" + port + " --- Message: " + message)
+
+    # The callback for when the client receives a CONNACK response from the server.
+
+    def __on_connect(self, client, userdata, flags, rc):
+        print("Connected with result code " + str(rc))
+
+        # Subscribing in on_connect() means that if we lose the connection and
+        # reconnect then subscriptions will be renewed.
+        # client.subscribe("$SYS/#")
 
 def check_thread_alive(thr):
     thr.join(timeout=0.0)
@@ -175,14 +208,19 @@ def main():
     parser = argparse.ArgumentParser(description='Device Id(s).')
     parser.add_argument('devices', metavar='D', type=str, nargs='+',
                         help='a list of device Ids')
+    parser.add_argument('--mqtt-ip', dest='mqttIp', type=str, default="127.0.0.1",
+                    help='The IP address of the MQTT Server')
+    parser.add_argument('--mqtt-port', dest='mqttPort', type=int, default=1883,
+                    help='The port number of the MQTT Server')
 
     args = parser.parse_args()
     threads = []
+    mqttClient = MqttClient(args.mqttIp, args.mqttPort)
 
     for device in args.devices:
         try:
             thread = DeviceThread()
-            thread.connect(device)
+            thread.connect(device, mqttClient)
             thread.start()
             threads.append(thread)
         except Exception as e:
