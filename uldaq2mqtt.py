@@ -6,6 +6,7 @@ from uldaq import (get_daq_device_inventory,
                    DigitalPortType)
 from enum import Flag, auto
 import argparse
+import time
 
 interfaceType = InterfaceType.USB
 
@@ -153,6 +154,10 @@ class DeviceThread(threading.Thread):
         finally:
             self.disconnect()
 
+def check_thread_alive(thr):
+    thr.join(timeout=0.0)
+    return thr.is_alive()
+
 def main():
     devices = get_daq_device_inventory(InterfaceType.ANY)
     if not devices:
@@ -168,16 +173,20 @@ def main():
                         help='a list of device Ids')
 
     args = parser.parse_args()
+    threads = []
 
     for device in args.devices:
         thread = DeviceThread()
         thread.connect(device)
         thread.start()
+        threads.append(thread)
 
-        try:
-            thread.join()
-        except Exception as e:
-            raise Exception(e)
+    while True:
+        for thread in threads:
+            if not check_thread_alive(thread):
+                raise Exception("Thread died.")
+        time.sleep(1)
+
 
 if __name__ == "__main__":
     main()
