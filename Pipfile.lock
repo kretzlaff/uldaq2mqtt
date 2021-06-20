@@ -1,0 +1,36 @@
+{
+    "_meta": {
+        "hash": {
+            "sha256": "9ea140ab16c9067384fe02a4cc1e4886d7793de2296067f549602f7095a582ec"
+        },
+        "pipfile-spec": 6,
+        "requires": {
+            "python_version": "3.9"
+        },
+        "sources": [
+            {
+                "name": "pypi",
+                "url": "https://pypi.org/simple",
+                "verify_ssl": true
+            }
+        ]
+    },
+    "default": {
+        "paho-mqtt": {
+            "hashes": [
+                "sha256:9feb068e822be7b3a116324e01fb6028eb1d66412bf98595ae72698965cb1cae"
+            ],
+            "index": "pypi",
+            "version": "==1.5.1"
+        },
+        "uldaq": {
+            "hashes": [
+                "sha256:bfb3cc56a229eebeb6d42d153015f8e5263b9198a6012041227a4f5e77701f52",
+                "sha256:fb315cad3ea755267a9e0d9f723dbb9d870253955ab9c3d49c71affb30553fe1"
+            ],
+            "index": "pypi",
+            "version": "==1.2.2"
+        }
+    },
+    "develop": {}
+}
