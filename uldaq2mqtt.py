@@ -99,7 +99,7 @@ class DeviceClient(object):
             self._disconnect()
             raise Exception(e)
 
-    def read_device(self, a, b, c):
+    def read_device(self):
         try:
             res = self.__dio_device.d_in_list(
                 DigitalPortType.FIRSTPORTA, DigitalPortType.FIRSTPORTC)
@@ -141,13 +141,7 @@ class DeviceThread(threading.Thread):
         super(DeviceThread, self).__init__()
 
     def connect(self, device_id):
-        self.__device_id = device_id
         self.__deviceClient.connect(device_id)
-
-    def configure(self, a, b, c):
-        self.__a = a
-        self.__b = b
-        self.__c = c
 
     def disconnect(self):
         self.__deviceClient._disconnect()
@@ -155,10 +149,7 @@ class DeviceThread(threading.Thread):
     def run(self):
         try:
             while True:
-                self.__deviceClient.read_device(
-                    self.__a,
-                    self.__b,
-                    self.__c)
+                self.__deviceClient.read_device()
         finally:
             self.disconnect()
 
