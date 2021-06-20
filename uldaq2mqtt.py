@@ -83,7 +83,7 @@ class DeviceClient(object):
 
             # Establish a connection to the DAQ device.
             self.__descriptor = self.__daq_device.get_descriptor()
-            print('\nConnecting to', self.__descriptor.dev_string)
+            print('Connecting to', self.__descriptor.dev_string)
             self.__daq_device.connect()
 
             # Get the port types for the device(AUXPORT, FIRSTPORTA, ...)
