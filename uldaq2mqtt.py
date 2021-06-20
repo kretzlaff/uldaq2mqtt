@@ -137,15 +137,15 @@ class DeviceClient(object):
         self.__mqttClient.publish(self.__device_id, str(port) + "/" + str(self.__bitToInt(bit)), str(int(pressed)))
 
     def __bitToInt(self, bit):
-        if bit == Bits.ONE: return 1;
-        if bit == Bits.TWO: return 2;
-        if bit == Bits.THREE: return 3;
-        if bit == Bits.FOUR: return 4;
-        if bit == Bits.FIVE: return 5;
-        if bit == Bits.SIX: return 6;
-        if bit == Bits.SEVEN: return 7;
-        if bit == Bits.EIGHT: return 8;
-        return 0;
+        if bit == Bits.ONE: return 0;
+        if bit == Bits.TWO: return 1;
+        if bit == Bits.THREE: return 2;
+        if bit == Bits.FOUR: return 3;
+        if bit == Bits.FIVE: return 4;
+        if bit == Bits.SIX: return 5;
+        if bit == Bits.SEVEN: return 6;
+        if bit == Bits.EIGHT: return 7;
+        return -1;
 
 
 class DeviceThread(threading.Thread):
