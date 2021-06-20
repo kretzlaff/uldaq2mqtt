@@ -186,6 +186,8 @@ def main():
             thread.start()
             threads.append(thread)
         except Exception as e:
+            for thread in threads:
+                thread.stop = True
             raise Exception(e)
 
     while True:
