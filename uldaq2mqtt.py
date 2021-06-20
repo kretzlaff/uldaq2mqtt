@@ -174,5 +174,10 @@ def main():
         thread.connect(device)
         thread.start()
 
+        try:
+            thread.join()
+        except Exception as e:
+            raise Exception(e)
+
 if __name__ == "__main__":
     main()
