@@ -8,9 +8,11 @@ from enum import Flag, auto
 import argparse
 import time
 import paho.mqtt.client as mqtt
+import os
 
 interfaceType = InterfaceType.USB
 
+# The Bit mask
 class Bits(Flag):
     ONE = auto()
     TWO = auto()
@@ -22,7 +24,6 @@ class Bits(Flag):
     EIGHT = auto()
 
 class DeviceClient(object):
-    
     def __init__(self):
         self.__lastInputAction = {
             0: {
@@ -104,6 +105,7 @@ class DeviceClient(object):
 
     def read_device(self):
         try:
+            # Get the bit masks from all ports.
             res = self.__dio_device.d_in_list(
                 DigitalPortType.FIRSTPORTA, DigitalPortType.FIRSTPORTC)
 
@@ -137,15 +139,15 @@ class DeviceClient(object):
         self.__mqttClient.publish(self.__device_id, str(port) + "/" + str(self.__bitToInt(bit)), str(int(pressed)))
 
     def __bitToInt(self, bit):
-        if bit == Bits.ONE: return 0;
-        if bit == Bits.TWO: return 1;
-        if bit == Bits.THREE: return 2;
-        if bit == Bits.FOUR: return 3;
-        if bit == Bits.FIVE: return 4;
-        if bit == Bits.SIX: return 5;
-        if bit == Bits.SEVEN: return 6;
-        if bit == Bits.EIGHT: return 7;
-        return -1;
+        if bit == Bits.ONE: return 0
+        if bit == Bits.TWO: return 1
+        if bit == Bits.THREE: return 2
+        if bit == Bits.FOUR: return 3
+        if bit == Bits.FIVE: return 4
+        if bit == Bits.SIX: return 5
+        if bit == Bits.SEVEN: return 6
+        if bit == Bits.EIGHT: return 7
+        return -1
 
 
 class DeviceThread(threading.Thread):
@@ -171,11 +173,11 @@ class DeviceThread(threading.Thread):
             self.disconnect()
 
 class MqttClient:
-    
-    def __init__(self, ip, port):
+
+    def __init__(self, address, port):
         self.__client = mqtt.Client()
         self.__client.on_connect = self.__on_connect
-        self.__client.connect(ip, port, 60)
+        self.__client.connect(address, port, 60)
         self.__client.loop_start()
 
     def __enter__(self):
@@ -199,7 +201,7 @@ class MqttClient:
 
         # Subscribing in on_connect() means that if we lose the connection and
         # reconnect then subscriptions will be renewed.
-        # client.subscribe("$SYS/#")
+        client.subscribe("$SYS/#")
 
 def check_thread_alive(thr):
     thr.join(timeout=0.0)
@@ -215,22 +217,20 @@ def main():
         print('  ', device.product_name, ' (', device.unique_id, ') - ',
               'Device ID = ', device.product_id, sep='')
 
-    parser = argparse.ArgumentParser(description='Device Id(s).')
-    parser.add_argument('devices', metavar='D', type=str, nargs='+',
-                        help='a list of device Ids')
-    parser.add_argument('--mqtt-ip', dest='mqttIp', type=str, default="127.0.0.1",
+    parser.add_argument('--mqtt-address', dest='mqttAddress', type=str, default=os.getenv('MQTTAddress', "127.0.0.1"),
                     help='The IP address of the MQTT Server')
-    parser.add_argument('--mqtt-port', dest='mqttPort', type=int, default=1883,
+    parser.add_argument('--mqtt-port', dest='mqttPort', type=int, default=os.getenv('MQTTPort', "1883"),
                     help='The port number of the MQTT Server')
 
     args = parser.parse_args()
     threads = []
-    mqttClient = MqttClient(args.mqttIp, args.mqttPort)
+    mqttClient = MqttClient(args.mqttAddress, args.mqttPort)
 
-    for device in args.devices:
+    # Start each device in a new thread.
+    for device in devices:
         try:
             thread = DeviceThread()
-            thread.connect(device, mqttClient)
+            thread.connect(device.unique_id, mqttClient)
             thread.start()
             threads.append(thread)
         except Exception as e:
@@ -238,13 +238,15 @@ def main():
                 thread.stop = True
             raise Exception(e)
 
+    # Check if a thread has died.
+    # If so, stopp all others and crash.
     while True:
         for thread in threads:
             if not check_thread_alive(thread):
                 for thread in threads:
                     thread.stop = True
                 raise Exception("Thread died.")
-                
+
         time.sleep(1)
 
 
