@@ -18,3 +18,16 @@ uldaq2mqtt/<UniqueDeviceId>/<port>/<bit> = 0|1
 ```
 
 ## Usage
+
+### via docker compose
+
+```
+ uldaq2mqtt:
+    container_name: uldaq2mqtt
+    restart: always
+    build: ./uldaq2mqtt
+    privileged: true
+    environment:
+      - MQTTAddress=127.0.0.1
+      - MQTTPort=1883
+```
