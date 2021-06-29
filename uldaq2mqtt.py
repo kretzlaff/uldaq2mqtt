@@ -217,6 +217,7 @@ def main():
         print('  ', device.product_name, ' (', device.unique_id, ') - ',
               'Device ID = ', device.product_id, sep='')
 
+    parser = argparse.ArgumentParser()
     parser.add_argument('--mqtt-address', dest='mqttAddress', type=str, default=os.getenv('MQTTAddress', "127.0.0.1"),
                     help='The IP address of the MQTT Server')
     parser.add_argument('--mqtt-port', dest='mqttPort', type=int, default=os.getenv('MQTTPort', "1883"),
